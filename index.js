@@ -15,6 +15,7 @@ app.post('/webhook', async (req, res) => {
         Last_Name: wixData.lastName,
         Rent_Tenant_Email: wixData.email,
         Mobile: wixData.mobile,
+        Rent_Tenant_City: data.city,
         Lead_Source: wixData.leadSource || "Website Form",
         Message: wixData.message
       }
