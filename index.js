@@ -11,6 +11,7 @@ app.get("/", (req, res) => {
 
 app.post("/webhook", async (req, res) => {
   const data = req.body;
+  console.log("Incoming from Wix:", data); // 🐞 log the data
 
   // Prepare Zoho CRM payload
   const payload = {
