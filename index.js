@@ -10,10 +10,9 @@ app.get("/", (req, res) => {
 });
 
 app.post("/webhook", async (req, res) => {
-  const data = req.body;
-  console.log("Incoming from Wix:", data); // 🐞 log the data
+  const data = req.body.data;
+  console.log("Incoming from Wix:", data);
 
-  // Prepare Zoho CRM payload
   const payload = {
     data: [
       {
