@@ -1,29 +1,34 @@
-const express = require('express');
-const axios = require('axios');
-require('dotenv').config();
+const express = require("express");
+const axios = require("axios");
+require("dotenv").config();
 
 const app = express();
 app.use(express.json());
 
-app.post('/webhook', async (req, res) => {
-  const wixData = req.body;
+app.get("/", (req, res) => {
+  res.send("Webhook is live and listening.");
+});
 
+app.post("/webhook", async (req, res) => {
+  const data = req.body;
+
+  // Prepare Zoho CRM payload
   const payload = {
     data: [
       {
-        First_Name: wixData.firstName,
-        Last_Name: wixData.lastName,
-        Rent_Tenant_Email: wixData.email,
-        Mobile: wixData.mobile,
+        First_Name: data.firstName,
+        Last_Name: data.lastName,
+        Mobile: data.mobile,
+        Rent_Tenant_Email: data.email,
         Rent_Tenant_City: data.city,
-        Lead_Source: wixData.leadSource || "Website Form",
-        Message: wixData.message
+        Lead_Source: "Website",
+        Message: data.message
       }
     ]
   };
 
   try {
-    // Step 1: Get access token from refresh token
+    // Step 1: Get Access Token using Refresh Token
     const tokenResp = await axios.post("https://accounts.zoho.in/oauth/v2/token", null, {
       params: {
         refresh_token: process.env.ZOHO_REFRESH_TOKEN,
@@ -35,25 +40,22 @@ app.post('/webhook', async (req, res) => {
 
     const accessToken = tokenResp.data.access_token;
 
-    // Step 2: Push data to Zoho CRM
+    // Step 2: Send lead data to Zoho CRM
     const crmResp = await axios.post("https://www.zohoapis.in/crm/v5/Leads", payload, {
       headers: {
-        Authorization: `Zoho-oauthtoken ${accessToken}`
+        Authorization: `Zoho-oauthtoken ${accessToken}`,
+        "Content-Type": "application/json"
       }
     });
 
-    console.log("Lead created successfully:", crmResp.data);
-    res.status(200).json({ status: "success", zohoResponse: crmResp.data });
+    console.log("Lead successfully created:", crmResp.data);
+    res.status(200).json({ status: "success", data: crmResp.data });
 
-  } catch (err) {
-    console.error("Error:", err.response?.data || err.message);
-    res.status(500).json({ status: "error", error: err.response?.data || err.message });
+  } catch (error) {
+    console.error("Error creating lead:", error.response?.data || error.message);
+    res.status(500).json({ status: "error", message: error.response?.data || error.message });
   }
 });
 
-app.get('/', (req, res) => {
-  res.send("Wix → Zoho CRM middleware is running.");
-});
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
